@@ -123,9 +123,8 @@ func (s *subObserver) Unregister(ch chan<- interface{}) {
 	s.mo.reg <- taggedRegReq{s, ch, unregister}
 }
 
-func (s *subObserver) Close() error {
+func (s *subObserver) Close() {
 	s.mo.reg <- taggedRegReq{s, nil, purge}
-	return nil
 }
 
 func (s *subObserver) Submit(ob interface{}) {

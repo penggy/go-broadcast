@@ -7,10 +7,15 @@ which subscribers Register to pick up those messages.
 */
 package broadcast
 
+import (
+	"sync"
+)
+
 type broadcaster struct {
-	input chan interface{}
-	reg   chan chan<- interface{}
-	unreg chan chan<- interface{}
+	input   chan interface{}
+	reg     chan chan<- interface{}
+	regLock sync.RWMutex
+	unreg   chan chan<- interface{}
 
 	outputs map[chan<- interface{}]bool
 }
@@ -23,7 +28,7 @@ type Broadcaster interface {
 	// Unregister a channel so that it no longer receives broadcasts.
 	Unregister(chan<- interface{})
 	// Shut this broadcaster down.
-	Close() error
+	Close()
 	// Submit a new object to all subscribers
 	Submit(interface{})
 }
@@ -67,16 +72,22 @@ func NewBroadcaster(buflen int) Broadcaster {
 }
 
 func (b *broadcaster) Register(newch chan<- interface{}) {
-	b.reg <- newch
+	b.regLock.RLock()
+	defer b.regLock.RUnlock()
+	if b.reg != nil {
+		b.reg <- newch
+	}
 }
 
 func (b *broadcaster) Unregister(newch chan<- interface{}) {
 	b.unreg <- newch
 }
 
-func (b *broadcaster) Close() error {
+func (b *broadcaster) Close() {
+	b.regLock.Lock()
+	defer b.regLock.Unlock()
 	close(b.reg)
-	return nil
+	b.reg = nil
 }
 
 func (b *broadcaster) Submit(m interface{}) {
