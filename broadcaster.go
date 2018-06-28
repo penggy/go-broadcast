@@ -73,25 +73,31 @@ func NewBroadcaster(buflen int) Broadcaster {
 
 func (b *broadcaster) Register(newch chan<- interface{}) {
 	b.regLock.RLock()
-	defer b.regLock.RUnlock()
 	if b.reg != nil {
 		b.reg <- newch
 	}
+	b.regLock.RUnlock()
 }
 
 func (b *broadcaster) Unregister(newch chan<- interface{}) {
-	b.unreg <- newch
+	b.regLock.RLock()
+	if b.reg != nil {
+		b.unreg <- newch
+	}
+	b.regLock.RUnlock()
 }
 
 func (b *broadcaster) Close() {
 	b.regLock.Lock()
-	defer b.regLock.Unlock()
 	close(b.reg)
 	b.reg = nil
+	b.regLock.Unlock()
 }
 
 func (b *broadcaster) Submit(m interface{}) {
-	if b != nil && b.reg != nil {
+	b.regLock.RLock()
+	if b.reg != nil {
 		b.input <- m
 	}
+	b.regLock.RUnlock()
 }
