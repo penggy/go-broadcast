@@ -89,8 +89,10 @@ func (b *broadcaster) Unregister(newch chan<- interface{}) {
 
 func (b *broadcaster) Close() {
 	b.regLock.Lock()
-	close(b.reg)
-	b.reg = nil
+	if b.reg != nil {
+		close(b.reg)
+		b.reg = nil
+	}
 	b.regLock.Unlock()
 }
 
