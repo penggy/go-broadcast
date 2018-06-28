@@ -91,7 +91,7 @@ func (b *broadcaster) Close() {
 }
 
 func (b *broadcaster) Submit(m interface{}) {
-	if b != nil {
+	if b != nil && b.reg != nil {
 		b.input <- m
 	}
 }
