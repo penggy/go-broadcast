@@ -1,10 +1,3 @@
-/*
-Package broadcast provides pubsub of messages over channels.
-
-A provider has a Broadcaster into which it Submits messages and into
-which subscribers Register to pick up those messages.
-
-*/
 package broadcast
 
 import (
@@ -20,16 +13,10 @@ type broadcaster struct {
 	outputs map[chan<- interface{}]bool
 }
 
-// The Broadcaster interface describes the main entry points to
-// broadcasters.
 type Broadcaster interface {
-	// Register a new channel to receive broadcasts
 	Register(chan<- interface{})
-	// Unregister a channel so that it no longer receives broadcasts.
 	Unregister(chan<- interface{})
-	// Shut this broadcaster down.
 	Close()
-	// Submit a new object to all subscribers
 	Submit(interface{})
 }
 
@@ -59,8 +46,6 @@ func (b *broadcaster) run() {
 	}
 }
 
-// NewBroadcaster creates a new broadcaster with the given input
-// channel buffer length.
 func NewBroadcaster(buflen int) Broadcaster {
 	b := &broadcaster{
 		input:   make(chan interface{}, buflen),
